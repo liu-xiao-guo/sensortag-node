@@ -1,0 +1,17 @@
+name: st
+version: "0.1"
+summary: This is a test app for using nodejs for sensortag
+description: 
+  This app is used to show how to read data from a sensortag
+confinement: strict
+
+apps:
+  st:
+    command: bin/sensortag
+    # daemon: simple
+    plugs: [network-bind]
+
+parts:
+  node:
+    plugin: nodejs
+    source: . 
