@@ -10,8 +10,28 @@ apps:
     command: bin/sensortag
     # daemon: simple
     plugs: [network-bind]
+  sensor:
+    command: bin/wrapper
+    plugs: [home,bluez]
+  sh:
+    command: bin/sh
+  ctrl:
+    command: usr/bin/bluetoothctl
+
 
 parts:
+  bluez:
+    plugin: nil
+    stage-packages:
+      - bluetooth
+      - bluez
+      - blueman
+
   node:
     plugin: nodejs
     source: . 
+
+  glue:
+    plugin: copy
+    files:
+      ./bin: bin
