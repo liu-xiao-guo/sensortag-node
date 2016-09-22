@@ -29,7 +29,7 @@ SensorTag.discover(function(sensorTag) {
 
   sensorTag.on('disconnect', function() {
     console.log('disconnected!');
-    process.exit(0);
+    // process.exit(0);
   });
 
   async.series([
