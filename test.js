@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+var DEFAULT_HOST = 'localhost'
+var DEFAULT_PORT = 1883
+var mqtt = require('mqtt')
+
+var client = mqtt.connect({ port: DEFAULT_PORT, host: DEFAULT_HOST, keepalive: 10000});
+
+var isConnected = false;
+
 var util = require('util');
 
 var async = require('async');
@@ -7,6 +15,14 @@ var async = require('async');
 var SensorTag = require('./index');
 
 var USE_READ = true;
+var objTemp = 0;
+var humi = 0;
+var ambientTemp = 0;
+
+client.on('connect', function () {
+    console.log("MQTT is connected!")
+    isConnected = true;
+})
 
 SensorTag.discover(function(sensorTag) {
   console.log('discovered: ' + sensorTag);
@@ -93,7 +109,7 @@ SensorTag.discover(function(sensorTag) {
           });
 
           console.log('setIrTemperaturePeriod');
-          sensorTag.setIrTemperaturePeriod(500, function(error) {
+          sensorTag.setIrTemperaturePeriod(5000, function(error) {
             console.log('notifyIrTemperature');
             sensorTag.notifyIrTemperature(function(error) {
               setTimeout(function() {
@@ -104,10 +120,10 @@ SensorTag.discover(function(sensorTag) {
           });
         }
       },
-      function(callback) {
-        console.log('disableIrTemperature');
-        sensorTag.disableIrTemperature(callback);
-      },
+      // function(callback) {
+      //   console.log('disableIrTemperature');
+      //   sensorTag.disableIrTemperature(callback);
+      // },
       function(callback) {
         console.log('enableAccelerometer');
         sensorTag.enableAccelerometer(callback);
@@ -182,10 +198,10 @@ SensorTag.discover(function(sensorTag) {
           });
         }
       },
-      function(callback) {
-        console.log('disableHumidity');
-        sensorTag.disableHumidity(callback);
-      },
+      // function(callback) {
+      //   console.log('disableHumidity');
+      //   sensorTag.disableHumidity(callback);
+      // },
       function(callback) {
         console.log('enableMagnetometer');
         sensorTag.enableMagnetometer(callback);
@@ -382,33 +398,74 @@ SensorTag.discover(function(sensorTag) {
               sensorTag.disableLuxometer(callback);
             },
             function() {
-              callback();
+              // callback();
+                sensorTag.on('irTemperatureChange', function(objectTemperature, ambientTemperature) {
+                    if ( !isConnected )
+                        return;
+
+                    console.log('\tobject temperature1 = %d °C', objectTemperature.toFixed(1));
+                    console.log('\tambient temperature1 = %d °C', ambientTemperature.toFixed(1))
+
+                    objTemp = objectTemperature.toFixed(1);
+                    ambientTemp = ambientTemperature.toFixed(1);
+                });
+
+                // console.log('setIrTemperaturePeriod1');
+                sensorTag.setIrTemperaturePeriod(5000, function(error) {
+                    // console.log('notifyIrTemperature1');
+                    sensorTag.notifyIrTemperature(function(error) {
+                        setTimeout(function() {
+                            console.log('unnotifyIrTemperature');
+                            // sensorTag.unnotifyIrTemperature(callback);
+                        }, 5000);
+                    });
+                });
+
+                sensorTag.on('humidityChange', function(temperature, humidity) {
+                    if ( !isConnected )
+                        return;
+
+                    console.log('\ttemperature1 = %d °C', temperature.toFixed(1));
+                    console.log('\thumidity = %d %', humidity.toFixed(1));
+
+                    objTemp = "" + temperature.toFixed(1);
+                    humi = "" + humidity.toFixed(1);
+
+                    var data = { 'Temp': "(" + objTemp + "," + ambientTemp + ")",
+                                 'Humidity': "(" + objTemp + "," + humi + ")",
+                                 'Barometer':  "0",
+                                 'Accelerometer': "0",
+                                 'Magnetometer': "0",
+                                 'Gyroscope': "0",
+                                 'Light':  "0"
+                               }
+                    console.log("JSON string: " + JSON.stringify(data));
+                    client.publish("data",  JSON.stringify(data));
+
+                });
+
+                // console.log('setHumidityPeriod1');
+                sensorTag.setHumidityPeriod(5000, function(error) {
+                    // console.log('notifyHumidity1');
+                    sensorTag.notifyHumidity(function(error) {
+                        setTimeout(function() {
+                            console.log('unnotifyHumidity');
+                            // sensorTag.unnotifyHumidity(callback);
+                        }, 5000);
+                    });
+                });
+
             }
           ]);
         } else {
           callback();
         }
-      },
-      function(callback) {
-        console.log('readSimpleRead - waiting for button press ...');
-        sensorTag.on('simpleKeyChange', function(left, right, reedRelay) {
-          console.log('left: ' + left);
-          console.log('right: ' + right);
-          if (sensorTag.type === 'cc2650') {
-            console.log('reed relay: ' + reedRelay);
-          }
-
-          if (left || right) {
-            sensorTag.notifySimpleKey(callback);
-          }
-        });
-
-        sensorTag.notifySimpleKey();
-      },
-      function(callback) {
-        console.log('disconnect');
-        sensorTag.disconnect(callback);
       }
     ]
   );
 });
+
+// setInterval(function(){
+//   console.log('test');
+// }, 5 * 1000);
+

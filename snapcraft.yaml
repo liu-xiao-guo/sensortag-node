@@ -17,7 +17,10 @@ apps:
     command: bin/sh
   ctrl:
     command: usr/bin/bluetoothctl
-
+  mosquitto:
+    command: usr/sbin/mosquitto -c $SNAP/mosquitto.conf
+    daemon: simple
+    plugs: [network, network-bind]
 
 parts:
   bluez:
@@ -26,6 +29,12 @@ parts:
       - bluetooth
       - bluez
       - blueman
+
+  mosquitto:
+    plugin: copy
+    stage-packages: [mosquitto]
+    files:
+      mosquitto.conf: mosquitto.conf
 
   node:
     plugin: nodejs

@@ -2,6 +2,8 @@
 <project version="4">
   <component name="JavaScriptLibraryMappings">
     <file url="file://$PROJECT_DIR$" libraries="{node-sensortag/node_modules}" />
+    <file url="file://$PROJECT_DIR$/parts/glue/build" libraries="{node-sensortag/parts/glue/build/node_modules}" />
+    <file url="file://$PROJECT_DIR$/parts/glue/src" libraries="{node-sensortag/parts/glue/src/node_modules}" />
     <file url="file://$PROJECT_DIR$/parts/node/build" libraries="{node-sensortag/parts/node/build/node_modules}" />
     <file url="file://$PROJECT_DIR$/parts/node/src" libraries="{node-sensortag/parts/node/src/node_modules}" />
   </component>
